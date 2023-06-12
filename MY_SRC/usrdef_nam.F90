@@ -61,6 +61,7 @@ MODULE usrdef_nam
    INTEGER , PUBLIC ::   nn_smo             ! smoothing parameters (X x Y shapiro filters applied nn_smo times)
    REAL(wp), PUBLIC ::   rn_fsp             ! friction parameter 1/epsilon of the permeability               [1/s]
    !
+   INTEGER , PUBLIC ::   nn_rfr             ! layer friction for penalisation                      [1/s]
    INTEGER , PUBLIC ::   nn_fsp             ! friction parameter type                              [1/s]
    !
    REAL(wp), PUBLIC ::   r1_abp             ! inverse alpha boundary parameter                            [-]
@@ -100,7 +101,7 @@ CONTAINS
          &                 ln_bnd_refine, nn_bnd, rn_bnd_ref,      &   ! refine at north boundary
          &                 rn_bnd_len, rn_bnd_eqi, nn_bnd_ntr,     &
          &                 rn_f0 ,rn_beta, rn_tau,                 &   ! coriolis parameter, wind
-         &                 rn_modified_grav, rn_rfr,               &   ! reduced gravity, friction
+         &                 rn_modified_grav, rn_rfr, nn_rfr,       &   ! reduced gravity, friction
          &                 ln_hldc, rn_hldc, ln_hdiv_AD,           &   ! layer width diffusion, AD continuity
          &                 ln_mir_lapldf, ln_mir_ldf, ln_mir_adv,  &   ! mirror condition
          &                 ln_mir_coriolis, ln_mir_h,              &   !
@@ -181,6 +182,7 @@ CONTAINS
          WRITE(numout,*) '                           friction parameter           rn_fsp   = ', rn_fsp, '1/s'
          WRITE(numout,*) '                           size of the penz             rn_cnp   = ', rn_cnp
          WRITE(numout,*) '                           smoothing parameter          nn_smo   = ', nn_smo
+         WRITE(numout,*) '                           friction type                nn_rfr   = ', nn_rfr
          WRITE(numout,*) '                           bvp friction type            nn_fsp   = ', nn_fsp
 #endif
          WRITE(numout,*) '   '
