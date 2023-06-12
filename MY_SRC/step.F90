@@ -195,6 +195,11 @@ CONTAINS
          vv(ji,jj,jk,Nrhs) = vv(ji,jj,jk,Nrhs) + z1_2rho0 * ( vtau_b(ji,jj) + vtau(ji,jj) ) / ze3v(ji,jj,jk)
       END_3D
 
+      DO_3D_00_00(1,jpkm1)
+         uu(ji,jj,jk,Nrhs) = uu(ji,jj,jk,Nrhs) - rn_rfr * uu(ji,jj,jk,Nbb)
+         vv(ji,jj,jk,Nrhs) = vv(ji,jj,jk,Nrhs) - rn_rfr * vv(ji,jj,jk,Nbb)
+      END_3D
+
 # if defined key_bvp
       !  Add frictionnal term   - sigma * u
       !
