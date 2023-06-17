@@ -257,388 +257,6 @@ CONTAINS
       END WHERE
       CALL lbc_lnk( 'dommsk', rpo ,  'T', 1._wp, kfillmode=jpfillcopy )
       !!an
-      ! pour le fun
-      ! WRITE(numout,*) 'dommsk : Pour le fun...'
-      ! rpo(:,:,:) = 1._wp + rn_abp - rpo(:,:,:)
-      !!an
-      !
-      !  linear penalisation (speed points) coast = middle of porosity
-      ! -------------------------------------------------------------
-      ! z1d =  rn_dx / REAL(nn_AM98, wp)
-      ! DO jk = 1, jpkm1
-      !   DO_2D_00_00
-      !     z1x1 =  (1._wp - rn_abp)*(glamt(ji,jj) -       0._wp)/(rn_cnp * z1d) + 0.5_wp*(1._wp + rn_abp)
-      !     z1x1 = MAX(MIN(z1x1,1._wp), rn_abp)
-      !     z1x2 = -(1._wp - rn_abp)*(glamt(ji,jj) - 2000000._wp)/(rn_cnp * z1d) + 0.5_wp*(1._wp + rn_abp)
-      !     z1x2 = MAX(MIN(z1x2,1._wp), rn_abp)
-      !     z1x  = MIN(z1x1,z1x2)
-      !     !
-      !     z1y1 =  (1._wp - rn_abp)*(gphit(ji,jj) -       0._wp)/(rn_cnp * z1d) + 0.5_wp*(1._wp + rn_abp)
-      !     z1y1 = MAX(MIN(z1y1,1._wp), rn_abp)
-      !     z1y2 = -(1._wp - rn_abp)*(gphit(ji,jj) - 2000000._wp)/(rn_cnp * z1d) + 0.5_wp*(1._wp + rn_abp)
-      !     z1y2 = MAX(MIN(z1y2,1._wp), rn_abp)
-      !     z1y  = MIN(z1y1,z1y2)
-      !     !
-      !     rpo(ji,jj,jk) = MIN(z1x,z1y)
-      !     ! rpo(ji,jj,jk) = 1._wp
-      !     !
-      !   END_2D
-      ! END DO
-      ! CALL lbc_lnk( 'dommsk', rpo ,  'T', 1._wp, kfillmode=jpfillcopy )
-      ! WHERE(tmask(:,:,:) == 0._wp)
-      !   rpo   (:,:,:) = rn_abp             ! used on T points
-      ! END WHERE
-      ! ! !!an
-      ! ! rpo(:,:,:) = rn_abp
-      ! ! !!an
-      ! CALL lbc_lnk( 'dommsk', rpo ,  'T', 1._wp, kfillmode=jpfillcopy )
-      !
-      !  linear penalisation only on NS or WS coast
-      ! ---------------------------------------------------------
-      ! z1d =  rn_dx / REAL(nn_AM98, wp)
-      ! DO jk = 1, jpkm1
-      !   DO_2D_00_00
-      !     !
-      !     !                                !== South West Coast light  ==!
-      !     ! W
-      !     ! WRITE(numout,*) 'dommsk : West coast lightly penalised'
-      !     ! z1x1 =  (1._wp - rn_abp)*(glamt(ji,jj) -       0._wp)/(REAL(rn_cnp,wp) * z1d) + 0.5_wp*(1._wp + rn_abp)
-      !     ! ze2 = MAX(MIN(z1x1,1._wp), rn_abp)
-      !     ! !
-      !     ! z1y1 = -(1._wp - ze2)*(gphit(ji,jj) -  15._wp*z1d)/(REAL(rn_cnp,wp) * z1d) + 0.5_wp*(1._wp + ze2)
-      !     ! ze1 = MAX(MIN(z1y1,1._wp), ze2)
-      !     ! !
-      !     ! ! bmpt(ji,jj,jk) = ze1
-      !     ! ! bmpt(ji,jj,jk) = MIN(ze1,1._wp)
-      !     ! ! bmpt(ji,jj,jk) = MAX(MIN(ze1,1._wp), rn_abp)
-      !     ! rpo(ji,jj,jk) = ze1
-      !     !
-      !     !                                !== South West Coast + SW corner  ==!
-      !     ! W
-      !     ! WRITE(numout,*) 'dommsk : West coast penalised'
-      !     ! z1x1 =  (1._wp - rn_abp)*(glamt(ji,jj) -       0._wp)/(REAL(rn_cnp,wp) * z1d) + 0.5_wp*(1._wp + rn_abp)
-      !     ! ze2 = MAX(MIN(z1x1,1._wp), rn_abp)
-      !     ! !
-      !     ! zl = 1._wp * REAL(15,wp)*z1d ! radius   !   so rpo=1/2 take off the real coastline (3 - sqrt(2))
-      !     ! z0 = zl/3._wp                    ! center   !   so the mean take off the real coastline (1 - 1/3)
-      !     ! WRITE(numout,*) 'dommsk : West-South corner circle-penalised'
-      !     ! !                          so rpo=rn_abp take off the real coastline
-      !     ! z1x =  ( glamt(ji,jj) - (               z0 - REAL(rn_cnp,wp)*z1d/2 ) )/zl
-      !     ! z1y =  ( gphit(ji,jj) - (               z0 - REAL(rn_cnp,wp)*z1d/2 ) )/zl
-      !     ! zWS   = - (z1x*z1x + z1y*z1y - 1)  !circle
-      !     ! !
-      !     ! zWS =  MAX(MIN(zWS,1._wp), rn_abp)
-      !     ! ! IF ( z1y > 0._wp .OR. z1x > 0._wp ) THEN   ! quart de cercle coin
-      !     ! !   zWS = 1._wp
-      !     ! ! ENDIF
-      !     ! !
-      !     ! ze1 = zWS
-      !     ! IF (     z1x > 0._wp ) THEN   ! quart de cercle coin
-      !     !   ze1 = 1._wp   ! in the ocean
-      !     ! ELSEIF ( z1y > 0._wp )THEN
-      !     !   ze1 = ze2    ! in the West coast penalised
-      !     ! ENDIF          ! in the quarter circle
-      !     ! ! bmpt(ji,jj,jk) = ze1
-      !     ! ! bmpt(ji,jj,jk) = MIN(ze1,1._wp)
-      !     ! ! bmpt(ji,jj,jk) = MAX(MIN(ze1,1._wp), rn_abp)
-      !     ! rpo(ji,jj,jk) = ze1
-      !     ! !
-      !     !                                           !   tought for d=15 and gc = 8
-      !     ! zl = 3._wp * REAL(rn_cnp,wp)*z1d ! radius   !   so rpo=1/2 take off the real coastline (3 - sqrt(2))
-      !     ! z0 = zl/3._wp                    ! center   !   so the mean take off the real coastline (1 - 1/3)
-      !     ! !
-      !     ! !                               !==  West South Circle Corner  ==!
-      !     ! WRITE(numout,*) 'dommsk : West-South corner circle-penalised'
-      !     ! !
-      !     ! z1x =  ( glamt(ji,jj) - (               z0 - REAL(rn_cnp,wp)*z1d/2 ) )/zl
-      !     ! z1y =  ( gphit(ji,jj) - (               z0 - REAL(rn_cnp,wp)*z1d/2 ) )/zl
-      !     ! !
-      !     ! zWS   = - (z1x*z1x + z1y*z1y - 1)  !circle
-      !     ! !
-      !     ! IF ( z1y > 0._wp .OR. z1x > 0._wp ) THEN   ! quart de cercle coin
-      !     !   zWS = 1._wp
-      !     ! ENDIF
-      !     ! zWS =  MAX(MIN(zWS,1._wp), rn_abp)
-      !     ! ! rpo(ji,jj,jk) = zWS
-      !     ! !
-      !     ! !                               !==  East South Circle Corner  ==!
-      !     ! WRITE(numout,*) 'dommsk : East-South corner circle-penalised'
-      !     ! !
-      !     ! z1x =  ( glamt(ji,jj) - ( 2000000._wp - z0 + REAL(rn_cnp,wp)*z1d/2 ) )/zl
-      !     ! z1y =  ( gphit(ji,jj) - (               z0 - REAL(rn_cnp,wp)*z1d/2 ) )/zl
-      !     ! !
-      !     ! zES   = - (z1x*z1x + z1y*z1y - 1)  !circle
-      !     ! !
-      !     ! IF ( z1y > 0._wp .OR. z1x < 0._wp ) THEN   ! quart de cercle coin
-      !     ! zES = 1._wp
-      !     ! ENDIF
-      !     ! zES =  MAX(MIN(zES,1._wp), rn_abp)
-      !     ! rpo(ji,jj,jk) = zES
-      !     ! !
-      !     ! !                               !==  West North Circle Corner  ==!
-      !     ! WRITE(numout,*) 'dommsk : West-North corner circle-penalised'
-      !     ! !
-      !     ! z1x =  ( glamt(ji,jj) - (               z0 - REAL(rn_cnp,wp)*z1d/2 ) )/zl
-      !     ! z1y =  ( gphit(ji,jj) - ( 2000000._wp - z0 + REAL(rn_cnp,wp)*z1d/2 ) )/zl
-      !     ! !
-      !     ! zWN   = - (z1x*z1x + z1y*z1y - 1)  !circle
-      !     ! !
-      !     ! IF ( z1y < 0._wp .OR. z1x > 0._wp ) THEN   ! quart de cercle coin
-      !     !   zWN = 1._wp
-      !     ! ENDIF
-      !     ! !
-      !     ! zWN = MAX(MIN(zWN,1._wp), rn_abp)
-      !     ! ! rpo(ji,jj,jk) = zWN
-      !     ! !
-      !     ! !                             !==  East North Circle Corner  ==!
-      !     ! WRITE(numout,*) 'dommsk : East-North corner circle-penalised'
-      !     ! !
-      !     ! z1x =  ( glamt(ji,jj) - ( 2000000._wp - z0 + REAL(rn_cnp,wp)*z1d/2 ) )/zl
-      !     ! z1y =  ( gphit(ji,jj) - ( 2000000._wp - z0 + REAL(rn_cnp,wp)*z1d/2 ) )/zl
-      !     ! !
-      !     ! zEN   = - (z1x*z1x + z1y*z1y - 1)  !circle
-      !     ! !
-      !     ! IF ( z1y < 0._wp .OR. z1x < 0._wp ) THEN   ! quart de cercle coin
-      !     ! zEN = 1._wp
-      !     ! ENDIF
-      !     ! !
-      !     ! zEN = MAX(MIN(zEN,1._wp), rn_abp)
-      !     ! ! rpo(ji,jj,jk) = zEN
-      !     ! !
-      !     ! !          !==  West (North+South) Corners  ==!
-      !     ! ! WRITE(numout,*) 'dommsk : North corners circle-penalised'
-      !     ! ! rpo(ji,jj,jk) = MIN(zWS,zWN)
-      !     ! !                   !==  All Corners  ==!
-      !     ! WRITE(numout,*) 'dommsk : All four corners circle-penalised'
-      !     ! rpo(ji,jj,jk) = MIN(zWS,zWN,zES,zEN)   ! ils sont chacun indépendanant
-      !     !
-      !     !                                !==  South West coastlines  ==!
-      !     !! SW coast
-      !     ! WRITE(numout,*) 'dommsk : West-South coast penalised'
-      !     ! z1x1   =  (1._wp - rn_abp)*(glamt(ji,jj) -       0._wp)/(REAL(rn_cnp,wp) * z1d) + 0.5_wp*(1._wp + rn_abp)
-      !     ! z1x1 = MAX(MIN(z1x1,1._wp), rn_abp)
-      !     ! !
-      !     ! z1y1 =  (1._wp - rn_abp)*(gphit(ji,jj) -       0._wp)/(REAL(rn_cnp,wp) * z1d) + 0.5_wp*(1._wp + rn_abp)
-      !     ! z1y1 = MAX(MIN(z1y1,1._wp), rn_abp)
-      !     ! z1y  = MIN(z1y1,z1y2)
-      !     ! !
-      !     ! rpo(ji,jj,jk) = MIN(z1x1, z1y)
-      !     !
-      !     ! W
-      !     WRITE(numout,*) 'dommsk : West coast penalised'
-      !     z1x1 =  (1._wp - rn_abp)*(glamt(ji,jj) -       0._wp)/(REAL(rn_cnp,wp) * z1d) + 0.5_wp*(1._wp + rn_abp)
-      !     z1x1 = MAX(MIN(z1x1,1._wp), rn_abp)
-      !     !
-      !     ! ! EW
-      !     ! WRITE(numout,*) 'dommsk : West-East coast penalised'
-      !     ! z1x1 =  (1._wp - rn_abp)*(glamt(ji,jj) -       0._wp)/(REAL(rn_cnp,wp) * z1d) + 0.5_wp*(1._wp + rn_abp)
-      !     ! z1x1 = MAX(MIN(z1x1,1._wp), rn_abp)
-      !     ! z1x2 = -(1._wp - rn_abp)*(glamt(ji,jj) - 2000000._wp)/(REAL(rn_cnp,wp) * z1d) + 0.5_wp*(1._wp + rn_abp)
-      !     ! z1x2 = MAX(MIN(z1x2,1._wp), rn_abp)
-      !     ! z1x  = MIN(z1x1,z1x2)
-      !     !
-      !     !NS
-      !     ! WRITE(numout,*) 'dommsk : North-South coast penalised'
-      !     ! z1y1 =  (1._wp - rn_abp)*(gphit(ji,jj) -       0._wp)/(REAL(rn_cnp,wp) * z1d) + 0.5_wp*(1._wp + rn_abp)
-      !     ! z1y1 = MAX(MIN(z1y1,1._wp), rn_abp)
-      !     ! z1y2 = -(1._wp - rn_abp)*(gphit(ji,jj) - 2000000._wp)/(REAL(rn_cnp,wp) * z1d) + 0.5_wp*(1._wp + rn_abp)
-      !     ! z1y2 = MAX(MIN(z1y2,1._wp), rn_abp)
-      !     ! z1y  = MIN(z1y1,z1y2)
-      !     !
-      !     ! rpo(ji,jj,jk) = MIN(z1x,z1y)
-      !     rpo(ji,jj,jk) = z1x1   ! W
-      !     !
-      !   END_2D
-      ! END DO
-      ! CALL lbc_lnk( 'dommsk', rpo ,  'T', 1._wp, kfillmode=jpfillcopy )
-      ! WHERE(tmask(:,:,:) == 0._wp)
-      !   rpo   (:,:,:) = rn_abp             ! used on T points
-      ! END WHERE
-      ! ! !!an
-      ! ! rpo(:,:,:) = rn_abp
-      ! ! !!an
-      ! CALL lbc_lnk( 'dommsk', rpo ,  'T', 1._wp, kfillmode=jpfillcopy )
-
-      !
-      !  tanh penalisation (T point) coast = min of rpo
-      ! ------------------------------------------------
-      ! z1d =  rn_dx / REAL(nn_AM98, wp)
-      ! DO jk = 1, jpkm1
-      !   DO_2D_00_00
-      !     z1x =    tanh( (glamt(ji,jj) - 0._wp       - rn_cnp*z1d )/(rn_cnp * z1d) )         &
-      !         &  - tanh( (glamt(ji,jj) - 2000000._wp + rn_cnp*z1d )/(rn_cnp * z1d) )
-      !     z1x = z1x * 0.5_wp
-      !     z1x = (1._wp - rn_abp) * z1x + rn_abp
-      !     !
-      !     z1y =    tanh( (gphit(ji,jj) - 0._wp       - rn_cnp*z1d )/(rn_cnp * z1d) )         &
-      !         &  - tanh( (gphit(ji,jj) - 2000000._wp + rn_cnp*z1d )/(rn_cnp * z1d) )
-      !     z1y = z1y * 0.5_wp
-      !     z1y = (1._wp - rn_abp) * z1y + rn_abp
-      !     !
-      !     rpo(ji,jj,jk) = MIN(z1x,z1y)
-      !     !
-      !   END_2D
-      ! END DO
-      ! CALL lbc_lnk( 'dommsk', rpo ,  'T', 1._wp, kfillmode=jpfillcopy )
-      ! WHERE(tmask(:,:,:) == 0._wp)
-      !   rpo   (:,:,:) = rn_abp             ! used on T points
-      ! END WHERE
-      ! CALL lbc_lnk( 'dommsk', rpo ,  'T', 1._wp, kfillmode=jpfillcopy )
-      !  tanh penalisation (T point) coast = middle of rpo
-      ! ----------------------------------------
-      ! z1d =  rn_dx / REAL(nn_AM98, wp)
-      ! DO jk = 1, jpkm1
-      !   DO_2D_00_00
-      !     z1x =    tanh( (glamt(ji,jj) - 0._wp       - z1d*0.5_wp )/(rn_cnp * z1d) ) +       &
-      !         &  - tanh( (glamt(ji,jj) - 2000000._wp + z1d*0.5_wp )/(rn_cnp * z1d) )
-      !     z1x = z1x * 0.5_wp
-      !     !
-      !     z1y =    tanh( (gphit(ji,jj) - 0._wp       - z1d*0.5_wp )/(rn_cnp * z1d) ) +       &
-      !         &  - tanh( (gphit(ji,jj) - 2000000._wp + z1d*0.5_wp )/(rn_cnp * z1d) )
-      !     z1y = z1y * 0.5_wp
-      !     !
-      !     rpo(ji,jj,jk) = MIN(z1x,z1y)
-      !     !
-      !   END_2D
-      ! END DO
-      ! CALL lbc_lnk( 'dommsk', rpo ,  'T', 1._wp, kfillmode=jpfillcopy )
-      ! WHERE(rpo(:,:,:) < rn_abp)
-      !    rpo   (:,:,:) = rn_abp             ! used on T points
-      ! END WHERE
-      ! CALL lbc_lnk( 'dommsk', rpo ,  'T', 1._wp, kfillmode=jpfillcopy )
-      !
-      ! rn_abp = 1.e-2    EXP06 (with smoothing)
-      ! goes 1 cell off shore at 45 degree
-      ! first ocean cell at 0 degree
-      !                                                                    !== T-points ==!
-      ! DO jk = 1, jpkm1
-      !   DO_2D_00_00
-      !     IF ( tmask(ji,jj,1) == 1._wp) THEN
-      !        IF  ( (      fmask(ji-1,jj  ,1) + fmask(ji,jj  ,1)           +             &
-      !         &           fmask(ji-1,jj-1,1) + fmask(ji,jj-1,1)           )  < 4._wp    )   THEN
-      !           !
-      !           rpo   (ji,jj,1:jpkm1) = rn_abp             ! T points
-      !           !
-      !        ENDIF
-      !     ENDIF
-      !   END_2D
-      ! END DO
-      ! CALL lbc_lnk( 'dommsk', rpo ,  'T', 1._wp, kfillmode=jpfillcopy )
-      ! !                                                                    !== F-points ==!
-      ! DO jk = 1, jpkm1
-      !   DO_2D_00_00
-      !     IF ( fmask(ji,jj,1) == 1._wp) THEN
-      !       IF             ( (      fmask(ji-1,jj+1,1) + fmask(ji+1,jj+1,1)           +             &
-      !           &                   fmask(ji-1,jj-1,1) + fmask(ji+1,jj-1,1)           )  < 4._wp    )   THEN
-      !           ! side
-      !           rpof(ji,jj,1) = rn_abp
-      !           !
-      !       ELSE   IF      ( (      fmask(ji-1,jj+1,1) + fmask(ji+1,jj+1,1)           +             &
-      !             &                 fmask(ji-1,jj-1,1) + fmask(ji+1,jj-1,1)           ) == 1._wp    )   THEN
-      !           ! corners
-      !           rpof(ji,jj,1) = rn_abp/2._wp
-      !           !
-      !       ENDIF
-      !     ENDIF
-      !   END_2D
-      ! END DO
-      ! CALL lbc_lnk( 'dommsk', rpof,  'F', 1._wp, kfillmode=jpfillcopy )
-      !
-      ! rn_abp = 0.5      EXP03 (without smoothing) and EXP04 (with smoothing) or EXP05 (without smoothing)
-      !                   EXP07
-      !                   EXP11 (non rotated basin) : rpo and rpov/rpou
-      !                !== T-points ==!
-      ! Nearest neighbourg
-      ! DO jk = 1, jpkm1
-      !   DO_2D_00_00
-      !      IF( ( (                    vmask(ji,jj  ,jk)                     +      &
-      !       &      umask(ji-1,jj,jk) +                  umask(ji,jj,jk)     +      &
-      !       &                         vmask(ji,jj-1,jk)        )  < 3._wp  ) .AND. &
-      !       &                         tmask(ji,jj,jk) == 1._wp                 )   THEN
-      !         !
-      !         rpo   (ji,jj,jk) = rn_abp             ! T points
-      !         !
-      !      ENDIF
-      !      IF( ( (                    vmask(ji,jj  ,jk)                     +      &
-      !       &      umask(ji-1,jj,jk) +                  umask(ji,jj,jk)     +      &
-      !       &                         vmask(ji,jj-1,jk)        )  == 3._wp  ) .AND. &
-      !       &                         tmask(ji,jj,jk) == 1._wp                 )   THEN
-      !         !
-      !         rpo   (ji,jj,jk) = 0.5_wp * rn_abp             ! T points
-      !         !
-      !      ENDIF
-      !   END_2D
-      ! END DO
-      ! CALL lbc_lnk( 'dommsk', rpo ,  'T', 1._wp, kfillmode=jpfillcopy )
-      !
-      ! utile pour le 0°
-      ! DO jk = 1,jpkm1
-      !   DO_2D_10_10
-      !      rpou(ji,jj,jk) = MAX( rpo(ji,jj,jk), rpo(ji+1,jj  ,jk) )
-      !      rpov(ji,jj,jk) = MAX( rpo(ji,jj,jk), rpo(ji  ,jj+1,jk) )
-      !   END_2D
-      ! END DO
-      ! CALL lbc_lnk_multi( 'dommsk', rpov  , 'V', 1._wp, rpou  , 'U', 1._wp, kfillmode=jpfillcopy )
-      !
-      !
-      !              !== F-points ==!
-      ! half e1e2f (45 rotated)
-      ! DO jk = 1, jpkm1
-      !   DO_2D_00_00
-      !       IF      (       (    umask(ji,jj,jk) + umask(ji  ,jj+1,jk)    &
-      !           &           +    vmask(ji,jj,jk) + vmask(ji+1,jj  ,jk)    )  == 2._wp   ) THEN
-      !       ! IF      ( ssfmask(ji,jj) + fmask(ji,jj,jk) == 1._wp   ) THEN
-      !         ! side
-      !         rpof   (ji,jj,jk) = rn_abp
-      !         !
-      !     ELSE IF (       (    umask(ji,jj,jk) + umask(ji  ,jj+1,jk)    &
-      !         &           +    vmask(ji,jj,jk) + vmask(ji+1,jj  ,jk)    )  == 1._wp   ) THEN
-      !         ! corners
-      !         rpof   (ji,jj,jk) = 0.5_wp * rn_abp
-      !         !
-      !     ENDIF
-      !   END_2D
-      ! END DO
-      ! CALL lbc_lnk( 'dommsk', rpof,  'F', 1._wp, kfillmode=jpfillcopy )
-      !
-      !
-      ! !
-      !
-      ! Spontaneous penalisation (mean)
-      ! DO_3D_00_00(1,jpkm1)
-      !    IF( ( (       vmask(ji-1,jj,1) + vmask(ji+1,jj,1) ) < 2._wp   )  .AND. &
-      !     &                         tmask(ji,jj,1) == 1._wp                   )   THEN
-      !       rpov   (ji,jj,jk) = 0.5_wp  * (    rpo(ji,jj  ,jk) +    rpo(ji  ,jj+1,jk)   )
-      !       r1_rpov(ji,jj,jk) = 1._wp / rpov(ji,jj,jk)
-      !    ENDIF
-      !    !
-      !    IF( ( (       umask(ji,jj-1,1) + umask(ji,jj+1,1) ) < 2._wp   )  .AND. &
-      !     &                         tmask(ji,jj,1) == 1._wp                   )   THEN
-      !       rpou   (ji,jj,jk) = 0.5_wp  * (    rpo(ji,jj  ,jk) +    rpo(ji  ,jj+1,jk)   )
-      !       r1_rpou(ji,jj,jk) = 1._wp / rpou(ji,jj,jk)
-      !    ENDIF
-      !    !
-      !    rpof   (ji,jj,jk) = 0.25_wp * (    rpo(ji,jj+1,jk) +    rpo(ji+1,jj+1,jk)   &
-      !        &                         +    rpo(ji,jj  ,jk) +    rpo(ji+1,jj  ,jk)   )
-      !    r1_rpof(ji,jj,jk) = 1._wp / rpof(ji,jj,jk)
-      ! END_3D
-      !
-      !! "Partial cells" (not rotated) (exp02)
-      ! DO_3D_00_00(1,jpkm1)
-      !   rpou   (ji,jj,jk) = MAX( rpo(ji,jj,jk), rpo(ji+1,jj  ,jk))
-      !   r1_rpou(ji,jj,jk) = 1._wp / rpou(ji,jj,jk)
-      !   rpov   (ji,jj,jk) = MAX( rpo(ji,jj,jk), rpo(ji  ,jj+1,jk) )
-      !   r1_rpov(ji,jj,jk) = 1._wp / rpov(ji,jj,jk)
-      !   rpof   (ji,jj,jk) = 1._wp
-      !   r1_rpof(ji,jj,jk) = 1._wp / rpof(ji,jj,jk)
-      ! END_3D
-      !
-      !
-      ! CALL lbc_lnk_multi( 'dommsk', rpo ,  'T', 1._wp,                     &
-      !         &                     rpou,  'U', 1._wp,                     &
-      !         &                     rpov,  'V', 1._wp,                     &
-      !         &                     rpof,  'F', 1._wp, kfillmode=jpfillcopy )
-      !
       !         !== SMOOTHING ==!
       ! Shapiro(1/2) on i and j components separatly
       WRITE(numout,*) 'dommsk : shapiro filter applied on rpo (',nn_smo,' times)'
@@ -647,7 +265,6 @@ CONTAINS
         DO jk = 1,jpkm1
           DO jj = 2, jpjm1
              DO ji = 2, jpim1
-               IF (tmask(ji-1,jj,jk)*tmask(ji,jj,jk)*tmask(ji+1,jj,jk) == 1._wp) THEN
                  z3d(ji,jj,jk) = 0.5_wp * rpo(ji,jj,jk) + 0.25_wp * (rpo(ji-1,jj,jk) + rpo(ji+1,jj,jk))
                ENDIF
              END DO
@@ -655,9 +272,7 @@ CONTAINS
         END DO
         CALL lbc_lnk( 'dommsk', z3d,  'T', 1._wp, kfillmode=jpfillcopy )
         rpo(:,:,:) = z3d(:,:,:)
-        CALL lbc_lnk( 'dommsk', rpo,  'T', 1._wp, kfillmode=jpfillcopy )
         !
-        z3d(:,:,:) = rpo(:,:,:)
         DO jk = 1,jpkm1
           DO jj = 2, jpjm1
              DO ji = 2, jpim1
@@ -733,41 +348,6 @@ CONTAINS
       !
       ! especially for upwellings
       z1d =  rn_dx / REAL(nn_AM98, wp)
-      DO_2D_00_00
-        ! normal to North and South coast
-        ! z1y =    tanh( (gphit(ji,jj) - 0._wp       - z1d*0.5_wp )/(rn_cnp * z1d) ) +       &
-        !     &  - tanh( (gphit(ji,jj) - 2000000._wp + z1d*0.5_wp )/(rn_cnp * z1d) ) - 1._wp
-        ! z1y = (1._wp - rn_abp) * z1y + rn_abp
-        ! z1x =    tanh( (gphit(ji,jj+1) - 0._wp       - z1d*0.5_wp )/(rn_cnp * z1d) ) +       &
-        !     &  - tanh( (gphit(ji,jj+1) - 2000000._wp + z1d*0.5_wp )/(rn_cnp * z1d) ) - 1._wp
-        ! z1x = (1._wp - rn_abp) * z1x + rn_abp
-        ! z1d = 0.5_wp * ( z1y + z1x )
-        ! ! bmpv(ji,jj, 1:jpkm1) = rn_fsp * 0.5_wp * ( ff_t(ji,jj) + ff_t(ji  ,jj+1) )   &
-        ! !    &                                   * (1._wp - z1d)
-        ! bmpv(ji,jj, 1:jpkm1) = rn_fsp * (1._wp - z1d)
-        !
-        ! normal to the East and West coast
-        ! z1y =    tanh( (glamt(ji,jj) - 0._wp    v   - z1d*0.5_wp )/(rn_cnp * z1d) ) +       &
-        !     &  - tanh( (glamt(ji,jj) - 2000000._wp + z1d*0.5_wp )/(rn_cnp * z1d) ) - 1._wp
-        ! z1y = (1._wp - rn_abp) * z1y + rn_abp
-        ! z1x =    tanh( (glamt(ji+1,jj) - 0._wp       - z1d*0.5_wp )/(rn_cnp * z1d) ) +       &
-        !     &  - tanh( (glamt(ji+1,jj) - 2000000._wp + z1d*0.5_wp )/(rn_cnp * z1d) ) - 1._wp
-        ! z1x = (1._wp - rn_abp) * z1x + rn_abp
-        ! z1d = 0.5_wp * ( z1y + z1x )
-        !
-        ! North and South paralell to the coast (0°)
-        ! z1y =    tanh( (gphit(ji,jj) - 0._wp       - z1d*0.5_wp )/(rn_cnp * z1d) ) +       &
-        !     &  - tanh( (gphit(ji,jj) - 2000000._wp + z1d*0.5_wp )/(rn_cnp * z1d) ) - 1._wp
-        ! z1y = (1._wp - rn_abp) * z1y + rn_abp
-        ! !
-        ! (0°)
-        ! bmpu(ji,jj, 1:jpkm1) = rn_fsp * (1._wp - z1y)
-        !(45°)
-        ! bmpu(ji,jj, 1:jpkm1) = rn_fsp * (1._wp - z1y) / SQRT(2._wp)
-        ! bmpv(ji,jj, 1:jpkm1) = rn_fsp * (1._wp - z1y) / SQRT(2._wp)
-        ! bmpu(ji,jj, 1:jpkm1) = rn_fsp * MIN(1._wp - z1y, 1._wp - z1d)
-        !
-      END_2D
       CALL lbc_lnk_multi( 'dommsk', bmpu,  'U', 1._wp, bmpv  , 'V', 1._wp, kfillmode=jpfillcopy )
       WHERE(vmask(:,:,:) == 0._wp)
         bmpv  (:,:,:) = 0             ! used on V points
@@ -823,23 +403,6 @@ CONTAINS
          CALL ctl_stop('STOP','dommsk: wrong value for nn_fsp'  )
       END SELECT
       !
-      ! DO_2D_00_00
-      !    bmpu(ji,jj, 1:jpkm1) = rn_fsp * 0.5_wp * ( ff_t(ji,jj) + ff_t(ji+1,jj  ) )   &
-      !       &                          * (1._wp - rpou(ji,jj,1:jpkm1)) * r1_rpou(ji,jj,1:jpkm1)
-      !    bmpv(ji,jj, 1:jpkm1) = rn_fsp * 0.5_wp * ( ff_t(ji,jj) + ff_t(ji  ,jj+1) )   &
-      !       &                          * (1._wp - rpov(ji,jj,1:jpkm1)) * r1_rpov(ji,jj,1:jpkm1)
-      ! END_2D
-
-      ! DO_2D_00_00
-      !    bmpu(ji,jj, 1:jpkm1) = rn_fsp * ( 1._wp - rpou(ji,jj,1:jpkm1) )
-      !    bmpv(ji,jj, 1:jpkm1) = rn_fsp * ( 1._wp - rpov(ji,jj,1:jpkm1) )
-      ! END_2D
-      !
-      ! constant
-      ! DO_2D_00_00
-      !    IF( rpou(ji,jj,1) < 1._wp )   bmpu(ji,jj, 1:jpkm1) = rn_fsp
-      !    IF( rpov(ji,jj,1) < 1._wp )   bmpv(ji,jj, 1:jpkm1) = rn_fsp
-      ! END_2D
       CALL lbc_lnk_multi( 'dommsk', bmpu,  'U', 1._wp, bmpv  , 'V', 1._wp, kfillmode=jpfillcopy )
 #endif
 
@@ -847,61 +410,21 @@ CONTAINS
       !  Add bathymetry from the porosity field
       ! --------------------------------------
       ! H = 5000m ; zalpha = (b-a)/2 ; zbeta = (b+a)/2
-      batht(:,:) = 4500._wp ! meters
+      batht(:,:) = 4500._wp * ( 1 - ze1 ) ! meters
       !
       z1d =  rn_dx / REAL(nn_AM98, wp) ; ze1 = 0._wp
       DO jk = 1, jpkm1
         DO_2D_00_00
+          !
           !  tanh penalisation (T point) coast = middle of rpo
           ! ----------------------------------------
-          z1x =    tanh( (glamt(ji,jj) - 0._wp       )/(rn_cnp * z1d * 0.25_wp) ) +       &
+          z1x =    tanh( (glamt(ji,jj) - 0._wp     )/(rn_cnp * z1d * 0.25_wp) ) +       &
             &  - tanh( (glamt(ji,jj) - 2000000._wp )/(rn_cnp * z1d * 0.25_wp) )
           z1x = z1x * 0.5_wp
           !
-          z1y =    tanh( (gphit(ji,jj) - 0._wp       )/(rn_cnp * z1d * 0.25_wp) ) +       &
+          z1y =    tanh( (gphit(ji,jj) - 0._wp     )/(rn_cnp * z1d * 0.25_wp) ) +       &
             &  - tanh( (gphit(ji,jj) - 2000000._wp )/(rn_cnp * z1d * 0.25_wp) )
           z1y = z1y * 0.5_wp
-          !
-          !  linear penalisation (speed points) coast = middle of porosity
-          ! -------------------------------------------------------------
-          !
-          ! z1x1 =  (1._wp - rn_abp)*(glamt(ji,jj) -       0._wp - (rn_cnp*ze1/4._wp))/(rn_cnp * z1d) + 0.5_wp*(1._wp + rn_abp)
-          ! z1x1 = MAX(MIN(z1x1,1._wp), rn_abp)
-          ! z1x2 = -(1._wp - rn_abp)*(glamt(ji,jj) - 2000000._wp + (rn_cnp*ze1/4._wp))/(rn_cnp * z1d) + 0.5_wp*(1._wp + rn_abp)
-          ! z1x2 = MAX(MIN(z1x2,1._wp), rn_abp)
-          ! z1x  = MIN(z1x1,z1x2)
-          ! !
-          ! z1y1 =  (1._wp - rn_abp)*(gphit(ji,jj) -       0._wp - (rn_cnp*ze1/4._wp))/(rn_cnp * z1d) + 0.5_wp*(1._wp + rn_abp)
-          ! z1y1 = MAX(MIN(z1y1,1._wp), rn_abp)
-          ! z1y2 = -(1._wp - rn_abp)*(gphit(ji,jj) - 2000000._wp + (rn_cnp*ze1/4._wp))/(rn_cnp * z1d) + 0.5_wp*(1._wp + rn_abp)
-          ! z1y2 = MAX(MIN(z1y2,1._wp), rn_abp)
-          ! z1y  = MIN(z1y1,z1y2)
-          !
-          !
-          ! W
-          ! WRITE(numout,*) 'dommsk : West coast bathy'
-          ! z1x1 =  (1._wp - rn_abp)*(glamt(ji,jj) -       0._wp)/(REAL(rn_cnp,wp) * z1d) + 0.5_wp*(1._wp + rn_abp)
-          ! z1x1 = MAX(MIN(z1x1,1._wp), rn_abp)
-          !
-          ! ! EW
-          ! WRITE(numout,*) 'dommsk : West-East coast penalised'
-          ! z1x1 =  (1._wp - rn_abp)*(glamt(ji,jj) -       0._wp)/(REAL(rn_cnp,wp) * z1d) + 0.5_wp*(1._wp + rn_abp)
-          ! z1x1 = MAX(MIN(z1x1,1._wp), rn_abp)
-          ! z1x2 = -(1._wp - rn_abp)*(glamt(ji,jj) - 2000000._wp)/(REAL(rn_cnp,wp) * z1d) + 0.5_wp*(1._wp + rn_abp)
-          ! z1x2 = MAX(MIN(z1x2,1._wp), rn_abp)
-          ! z1x  = MIN(z1x1,z1x2)
-          !
-          !NS
-          ! WRITE(numout,*) 'dommsk : North-South coast penalised'
-          ! z1y1 =  (1._wp - rn_abp)*(gphit(ji,jj) -       0._wp)/(REAL(rn_cnp,wp) * z1d) + 0.5_wp*(1._wp + rn_abp)
-          ! z1y1 = MAX(MIN(z1y1,1._wp), rn_abp)
-          ! z1y2 = -(1._wp - rn_abp)*(gphit(ji,jj) - 2000000._wp)/(REAL(rn_cnp,wp) * z1d) + 0.5_wp*(1._wp + rn_abp)
-          ! z1y2 = MAX(MIN(z1y2,1._wp), rn_abp)
-          ! z1y  = MIN(z1y1,z1y2)
-          !
-          !
-          !
-          ! ze1 = z1x1
           ze1 = MIN(z1x,z1y)
           batht(ji,jj) = 4500._wp * ( 1 - ze1 ) + ze1 * 5000._wp
           !
@@ -910,6 +433,36 @@ CONTAINS
       !
       CALL lbc_lnk( 'dommsk', batht,  'T', 1._wp)
       !
+      ! Shapiro smoothing
+      ! -----------------
+      WRITE(numout,*) 'dommsk : shapiro filter applied on bath (',nn_smo,' times)'
+      DO jl = 1, nn_smo
+        z3d(:,:,:) = batht(:,:,:)
+        DO jk = 1,jpkm1
+          DO jj = 2, jpjm1
+             DO ji = 2, jpim1
+                 z3d(ji,jj,jk) = 0.25_wp * batht(ji-1,jj,jk) + 0.5_wp * batht(ji,jj,jk) +  0.25_wp * batht(ji+1,jj,jk)
+               ENDIF
+             END DO
+          END DO
+        END DO
+        CALL lbc_lnk( 'dommsk', z3d,  'T', 1._wp, kfillmode=jpfillcopy )
+        batht(:,:,:) = z3d(:,:,:)
+        !
+        DO jk = 1,jpkm1
+          DO jj = 2, jpjm1
+             DO ji = 2, jpim1
+               z3d(ji,jj,jk) = 0.25_wp * batht(ji,jj-1,jk) + 0.5_wp * batht(ji,jj,jk) +  0.25_wp * batht(ji,jj+1,jk)
+               ENDIF
+             END DO
+          END DO
+        END DO
+        CALL lbc_lnk( 'dommsk', z3d,  'T', 1._wp, kfillmode=jpfillcopy )
+        batht(:,:,:) = z3d(:,:,:)
+      END DO
+
+      ! U-V bath
+      ! -----------------
       DO jj = 1, jpjm1
          DO ji = 1, jpim1
              IF (umask(ji,jj,1) == 1._wp ) THEN
